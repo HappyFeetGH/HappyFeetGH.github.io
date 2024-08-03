@@ -1,0 +1,55 @@
+# The EM algorithm
+
+machine learning과 통계학에서 ML 이나 MAP 파라미터 estimate는 관련된 무작위 변수들의 값들을 관측하여 쉽게 생산된다.
+하지만, missing data 또는 latent variables를 갖는다면, ML/MAP estimate를 찾는것은 어렵다.
+
+
+보편적인 경사도 기반의 optimizer는 **negative log likelihood(NLL)**의 local minumum을
+찾는 것이다.   
+$$NLL(\theta) = - \trangleq \frac{1}{N} \log p(D | \theta) $$
+
+
+하지만 때때로 covariance matrices는 positive하게정의되어야 한다는 등의 제한사항을 강제해야 한다. 
+
+그러한 경우 **expectation maximization(EM)**이라 불리는 알고리즘을 사용할 수 있다.
++ simple iterative 알고리즘이다.
++ 종종 각 step 마다 closed-form updates를 갖는다.
++ 이 알고리즘은 요구되는 제한사항을자동적으로 강제한다
+
+
+EM은 만약 데이터가 모두 관측되었으면, ML/MAP estimate는 계산하기 쉽다는 사실을 이용한다.   
++ 주어진 파라미터에서 missing value를 추론하는 단계(E step)
++ 주어진 "채워진" data에서 파라미터들을 최적화하는 단계(M step)
++ 위 단계를 통해 대체하는 반복적인 알고리즘이다.
+
+
+## Basic idea
+
+$$x_i$$가 case $$i$$에서 관측 가능하거나 관측된 변수들이라 할때, $$z_i$$는 hidden또는
+missing 변수들이다. 목표는 observed data의 log likelihood를 최대화 하는 것이다.
+
+$$l(\theta) = \sum_{i=1}^{N} \log p(x_i | \theta) = \sum_{i=1}^{N} \log[\sum_{z_i} p(x_i, z_i | \theta)] $$
+
+
+위 식은 최적화 하기 어렵다. log를 sum 내부로 넣을 수 없기 때문이다.
+
+EM은 이 문제를 다음과 같이 우회한다. **complete data log likelihood**를 정의한다:   
+$$l_c(\theta) \triangleq \sum_{i=1}^{N} \log p(x_i, z_i | \theta). $$
+
+
+이는 계산될 수 없다. $$z_i$$를 모르기 때문이다. 
+따라서 **expected complete data log likelihood**를 다음과 같이 정의한다:   
+$$Q(\theta, \theta^{t-1}) = E[l_c(\theta) | D, \theta^{t-1} ] $$.  
++ $$t$$는 current iteration number이다.
++ $$Q$$는 **auxiliary function**이라 불린다.
++ expectation은 old 파라미터 $$\theta^{t-1}$$와 observed data $$D$$에 대해서 취해진다.
++ **E step**의 목표는 MLE가 의존하는 내부항목 보다는
+$$Q(\theta, \theta^{t-1})$$를 계산하는 것이다.
++ 이는 **expected sufficient statistics(ESS)**로 알려져 있다.
+
++ **M step**에서, $$\theta$$에 대한 Q function을 최적화 한다:   
+$$Q(\theta, \theta^{t-1}) = E[l_c(\theta) | D, \theta^{t-1}]$$
+    + MAP estimation을 수행하기 위해, M step을 다음과 같이 수정한다
+    + $$\theta^t = \underset{\theta}{\operatorname{argmax}} Q(\theta, \theta^{t-1}]$$
+ 
++ E stp은 변하지 않은 채로 둔다
